@@ -11,95 +11,138 @@
 #include <sys/wait.h>
 #include "../input_manager/manager.h"
 
-void forkexample() 
-{ 
-    pid_t p;
-    pid_t pp;
-    pp = getpid();
-    printf("Hellooooo! %d\n", pp);
-    p = fork();
-    int x = 10;
-    if(p<0) 
-    { 
-      perror("fork fail"); 
-      exit(1); 
-    } 
-    // child process because return value zero 
-    else if ( p == 0) {
-        x++;
-        printf("Hello from Child! %d (%d)\n", p, getpid()); 
-        printf("\tMy Father is: %d\n", getppid());
-        printf("\tx = %d\n", x);
-    }
-
-    else if ( p == pp) {
-      printf("Hellooooo! %d\n", pp);
-      printf("\tx = %d\n", x);
-    }
-  
-    // parent process because return value non-zero. 
-    else {
-        x--;
-        printf("Hello from Parent! %d (%d)\n", p, getpid()); 
-        printf("\tMy Father is: %d\n", getppid());
-    }
-    printf("\n");
-    printf("\tx = %d (%d)\n", x, getpid());
+void lr_hello_world() {
+  //
+  write(1, "Hello World!\n", 13);
 }
 
-void waitexample() {
-    pid_t pid;
+void lr_sum(int* nums, int length) {
+  //
+  int suma = 0;
+  for (int i=0; i<length; i++) {
+    suma += nums[i];
+  }
 
-    // Create a new process using fork()
-    pid = fork();
+  // Transformar resultado int a char
+  char buffer[20];
+  int len_buff = snprintf(buffer, sizeof(buffer),
+    "%d\n", suma);
+  write(1, buffer, len_buff);
+}
 
-    if (pid < 0) {
-        // Fork failed
-        fprintf(stderr, "Fork failed\n");
-    } else if (pid == 0) {
-        // Child process
-        printf("Child process (PID: %d) is running...\n", getpid());
-        sleep(2); // Simulate some work by sleeping for 2 seconds
-        printf("Child process (PID: %d) is exiting...\n", getpid());
-        exit(0);  // Child process exits
-    } else {
-        // Parent process
-        printf("Parent process (PID: %d) is waiting for the child process (PID: %d) to finish...\n", getpid(), pid);
-        
-        // Wait for the child process to complete
-        int status;
-        waitpid(pid, &status, 0);
-        
-        if (WIFEXITED(status)) {
-            printf("Child process (PID: %d) exited with status: %d\n", pid, WEXITSTATUS(status));
-        } else {
-            printf("Child process (PID: %d) did not exit successfully.\n", pid);
-        }
-        
-        printf("Parent process (PID: %d) is exiting...\n", getpid());
+void lr_is_prime(int num) {
+  //
+  bool prime = true;
+  for (int i=2; i<num/2 ; i++) {
+    if (num % i == 0) {
+      prime = false;
     }
+  }
+  if (prime) write(1, "True\n", 5);
+  else write(1, "False\n", 6);
+}
+
+void lr_exec() {
+  //
+}
+
+void lr_list() {
+  //
+}
+
+void lr_exit() {
+  //
+}
+
+int get_array_length(char **input) {
+    int length = 0;
+
+    // Iterar 
+    while (input[length] != NULL) {
+        length++;
+    }
+
+    return length;
 }
 
 int main(int argc, char const *argv[])
 {
-  //char** input = read_user_input();
+  char** input;
+  while (1) {
 
-  //printf("%s\n", input[0]);
-  //printf("%s\n", input[1]);
+    input = read_user_input();
 
-  //if (!strcmp("hello", input[0])) {
-  //  write(1, "World\n", 6);
-    // write (
-    //   1 -> escribir en consola,
-    //   "mensaje",
-    //   6 -> len("mensaje")
-    // )
-  //}
-  //free_user_input(input);
 
-  //forkexample();
-  waitexample();
-  
+    // Obtener tamaño de array
+    int length = get_array_length(input);
+    //printf("El array tiene largo: %d\n", length);
+
+    // Si el ID está en 0: Estamos en el proceso hijo
+    // Si el ID es > 0: Estamos en el proceso padre
+    // fork retorna el id del hijo cuando se está en
+    //    el proceso padre.
+    pid_t process;
+    if (!strcmp("hello", input[0])) {
+      process = fork();
+      if (process < 0) printf("Error en fork()\n");
+      else if (process == 0) // Proceso hijo
+      {
+        lr_hello_world();
+        exit(0);
+      }
+      else {
+        waitpid(process, NULL, 0);
+      }
+    }
+
+    else if (!strcmp("sum", input[0])) {
+      process = fork();
+      if (process < 0) printf("Error en fork()\n");
+      else if (process == 0) // Proceso hijo
+      {
+        int* nums_sum = calloc(length - 1, sizeof(int));
+        for (int i=1; i<length; i++) {
+          nums_sum[i-1] = atoi(input[i]);
+        }
+        lr_sum(nums_sum, length-1);
+        free(nums_sum);
+        exit(0);
+      }
+      else {
+        waitpid(process, NULL, 0);
+      }
+    }
+
+    else if (!strcmp("is_prime", input[0])) {
+      process = fork();
+      if (process < 0) printf("Error en fork()\n");
+      else if (process == 0) // Proceso hijo
+      {
+        int prime_num = atoi(input[1]);
+        lr_is_prime(prime_num);
+        exit(0);
+      }
+      else {
+        waitpid(process, NULL, 0);
+      }
+    }
+
+    else if (!strcmp("lrexec", input[0])) {
+    }
+
+    else if (!strcmp("lrist", input[0])) {
+    }
+
+    else if (!strcmp("lrexit", input[0])) {
+    }
+
+    else if (!strcmp("lrout", input[0])) {
+      break;
+    }
+
+  }
+  free_user_input(input);
+
   return 0;
 }
 /*
