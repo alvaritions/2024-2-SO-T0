@@ -68,6 +68,7 @@ void lrexec(const char *executable, const char *const args[])
         // Este es el proceso padre
         // No esperamos a que el proceso hijo termine para permitir que la shell siga funcionando
     }
+
 }
 
 void lr_list() {
@@ -153,23 +154,32 @@ int main(int argc, char const *argv[])
 
     else if (!strcmp("lrexec", input[0])) 
     {
-      if (argc < 2) 
-      {
-        fprintf(stderr, "Uso: %s <executable> [<arg1> <arg2> ... <argn>]\n", argv[0]);
-        exit(EXIT_FAILURE);
-      }
-      const char *executable = argv[1];
 
-      int args_count = argc - 1;
+      const char *executable = input[1];
+
+
+      int args_count = length - 1;
 
       const char *exec_args[args_count + 1];
       for (int i = 0; i < args_count; i++) 
       {
-        exec_args[i] = argv[i + 1];
+        exec_args[i] = input[i + 1];
       }
       exec_args[args_count] = NULL; 
 
+      //printf("%s \n", executable);
+
       lrexec(executable, exec_args);
+
+      // process = fork();
+      // if (process < 0) printf("Error en fork()\n");
+      // else if (process == 0) // Proceso hijo
+      // {
+      //   execvp(input[1], );
+      // }
+      // else {
+      //}
+      
     }
 
     else if (!strcmp("lrist", input[0])) {
