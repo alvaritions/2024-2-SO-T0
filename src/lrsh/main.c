@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -42,8 +43,31 @@ void lr_is_prime(int num) {
   else write(1, "False\n", 6);
 }
 
-void lr_exec() {
-  //
+void lrexec(const char *executable, const char *const args[]) 
+{
+    pid_t pid = fork(); // Crear un nuevo proceso
+
+    if (pid < 0) 
+    {
+        // Error en fork
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) 
+    {
+        // Este es el proceso hijo
+        execve(executable, (char *const *)args, NULL); // Ejecutar el nuevo programa
+
+        // Si execve falla
+        perror("execve");
+        exit(EXIT_FAILURE);
+    } 
+    else 
+    {
+        // Este es el proceso padre
+        // No esperamos a que el proceso hijo termine para permitir que la shell siga funcionando
+    }
 }
 
 void lr_list() {
@@ -127,7 +151,25 @@ int main(int argc, char const *argv[])
       }
     }
 
-    else if (!strcmp("lrexec", input[0])) {
+    else if (!strcmp("lrexec", input[0])) 
+    {
+      if (argc < 2) 
+      {
+        fprintf(stderr, "Uso: %s <executable> [<arg1> <arg2> ... <argn>]\n", argv[0]);
+        exit(EXIT_FAILURE);
+      }
+      const char *executable = argv[1];
+
+      int args_count = argc - 1;
+
+      const char *exec_args[args_count + 1];
+      for (int i = 0; i < args_count; i++) 
+      {
+        exec_args[i] = argv[i + 1];
+      }
+      exec_args[args_count] = NULL; 
+
+      lrexec(executable, exec_args);
     }
 
     else if (!strcmp("lrist", input[0])) {
